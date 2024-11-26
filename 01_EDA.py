@@ -253,16 +253,22 @@ def process_text(df: pd.DataFrame) -> pd.DataFrame:
     df['word_count'] = df.words.apply(len)
     
     # Process swear words
-    f_words = ['fuck', 'fucking', 'fuckin', 'fucker', 'muthafucka', 
-               'motherfuckers', 'motherfucke', 'motha', 'motherfucker']
-    s_words = ['shit', 'shitter', 'shitting', 'shite', 'bullshit', 'shitty']
+    swear_words = ['fuck', 'fucking', 'fuckin', 'fucker', 'muthafucka', 
+               'motherfuckers', 'motherfucke', 'motha', 'motherfucker' , 
+               'shit', 'shitter', 'shitting', 'shite', 'bullshit', 'shitty']
     
-    df['f_words'] = df.words.apply(lambda x: sum(word.lower() in f_words for word in x))
-    df['s_words'] = df.words.apply(lambda x: sum(word.lower() in s_words for word in x))
+    # Combine all swear words into one column
+    df['swear_words'] = df.words.apply(lambda x: sum(word.lower() in swear_words for word in x))
+    
+    # Plot the distribution of swear words using a KDE plot
+    plt.figure(figsize=(10, 6))
+    ax = sns.kdeplot(df['swear_words'], fill=True, color="r")
+    ax.set_title('Swear Words Count KDE')
+    plt.savefig('output/01/Swear_Words_Distribution.png')
+    plt.close()
     
     # Remove swear words from words list
-    swears = f_words + s_words + ['cunt', 'asshole', 'damn', 'goddamn', 'cocksucker']
-    df['words'] = df.words.apply(lambda x: [word for word in x if word not in swears])
+    df['words'] = df.words.apply(lambda x: [word for word in x if word not in swear_words])
     
     # Create diversity features
     df['diversity'] = df.words.apply(lambda x: len(set(x)))
@@ -336,16 +342,16 @@ def process_transcript_data(file_paths: List[str]) -> pd.DataFrame:
         
         # Create features
         df = create_rating_features(df)
-        # df = process_text(df)
+        df = process_text(df)
         
         # plot visualizations
-        # plot_runtime_and_ratings(df)
-        # plot_word_visualizations(df)
-        # plot_wordclouds(df)
+        plot_runtime_and_ratings(df)
+        plot_word_visualizations(df)
+        plot_wordclouds(df)
         
         # Save processed data
-        # os.makedirs('output/data', exist_ok=True)
-        # df.to_pickle(OUTPUT_FILE_PATH_PKL)
+        os.makedirs('output/data', exist_ok=True)
+        df.to_pickle(OUTPUT_FILE_PATH_PKL)
         logging.info("Analysis completed successfully")
         return df
         
